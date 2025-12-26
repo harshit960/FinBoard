@@ -31,7 +31,9 @@ export default function SortableWidget({ widget, onRemove }: SortableWidgetProps
         return widget.config.symbol ? (
           <StockCard symbol={widget.config.symbol} />
         ) : (
-          <div className="text-sm text-muted-foreground">No symbol configured</div>
+          <div className="text-sm text-muted-foreground py-4 text-center">
+            No symbol configured
+          </div>
         );
       case "table":
         return <GainersTable />;
@@ -39,36 +41,57 @@ export default function SortableWidget({ widget, onRemove }: SortableWidgetProps
         return widget.config.symbol ? (
           <PriceChart symbol={widget.config.symbol} interval={widget.config.chartInterval} />
         ) : (
-          <div className="text-sm text-muted-foreground">No symbol configured</div>
+          <div className="text-sm text-muted-foreground py-4 text-center">
+            No symbol configured
+          </div>
         );
       default:
-        return <div className="text-sm text-muted-foreground">Unknown widget type</div>;
+        return (
+          <div className="text-sm text-muted-foreground py-4 text-center">
+            Unknown widget type
+          </div>
+        );
     }
+  };
+
+  const typeLabels: Record<string, string> = {
+    card: "Stock",
+    table: "Table",
+    chart: "Chart",
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-card border border-border rounded-lg shadow-sm ${
-        isDragging ? "opacity-50 shadow-lg" : ""
+      className={`bg-card border border-border rounded-xl shadow-sm transition-shadow hover:shadow-md ${
+        isDragging ? "opacity-50 shadow-lg scale-[1.02]" : ""
       }`}
     >
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div
           {...attributes}
           {...listeners}
-          className="flex items-center gap-2 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-2 cursor-grab active:cursor-grabbing flex-1 min-w-0"
         >
-          <span className="text-muted-foreground">⋮⋮</span>
-          <h3 className="font-medium text-card-foreground">{widget.title}</h3>
-          {widget.config.symbol && (
-            <span className="text-xs text-muted-foreground">({widget.config.symbol})</span>
-          )}
+          <span className="text-muted-foreground select-none">⋮⋮</span>
+          <div className="min-w-0">
+            <h3 className="font-medium text-card-foreground truncate">{widget.title}</h3>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>{typeLabels[widget.type]}</span>
+              {widget.config.symbol && (
+                <>
+                  <span>·</span>
+                  <span>{widget.config.symbol}</span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
         <button
           onClick={() => onRemove(widget.id)}
-          className="text-muted-foreground hover:text-destructive transition-colors text-sm"
+          className="text-muted-foreground hover:text-destructive transition-colors p-1 hover:bg-muted rounded"
+          title="Remove widget"
         >
           ✕
         </button>
