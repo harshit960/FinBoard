@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Modal from "./Modal";
 import { WidgetType, WidgetConfig } from "@/types";
-import { HiOutlineTrendingUp, HiOutlineTable, HiOutlineChartBar, HiCheckCircle } from "react-icons/hi";
+import { HiOutlineTrendingUp, HiOutlineTable, HiOutlineChartBar, HiCheckCircle, HiOutlineClock } from "react-icons/hi";
 
 interface AddWidgetModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
   const [selectedType, setSelectedType] = useState<WidgetType>("card");
   const [title, setTitle] = useState("");
   const [symbol, setSymbol] = useState("");
+  const [refreshInterval, setRefreshInterval] = useState(300);
 
   const selectedWidget = WIDGET_TYPES.find((w) => w.type === selectedType);
 
@@ -29,7 +30,9 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
     if (!title.trim()) return;
     if (selectedWidget?.needsSymbol && !symbol.trim()) return;
 
-    const config: WidgetConfig = {};
+    const config: WidgetConfig = {
+      refreshInterval: refreshInterval * 1000,
+    };
     if (selectedWidget?.needsSymbol) {
       config.symbol = symbol.trim().toUpperCase();
     }
@@ -43,6 +46,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
     setTitle("");
     setSymbol("");
     setSelectedType("card");
+    setRefreshInterval(300);
   };
 
   const handleClose = () => {
@@ -98,7 +102,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
         </div>
 
         {selectedWidget?.needsSymbol && (
-          <div className="mb-6">
+          <div className="mb-5">
             <label className="block text-sm font-medium mb-2">Stock Symbol</label>
             <input
               type="text"
@@ -107,9 +111,25 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
               placeholder="e.g., AAPL, MSFT, GOOGL"
               className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all uppercase"
             />
-            <p className="text-xs text-muted-foreground mt-2">Enter a valid stock ticker symbol</p>
           </div>
         )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-2">Refresh Interval</label>
+          <div className="relative">
+            <HiOutlineClock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="number"
+              min={30}
+              max={3600}
+              value={refreshInterval}
+              onChange={(e) => setRefreshInterval(Math.max(30, parseInt(e.target.value) || 300))}
+              className="w-full pl-11 pr-20 py-3 border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">seconds</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">Data refreshes automatically (min: 30s, default: 5min)</p>
+        </div>
 
         <div className="flex gap-3 pt-2">
           <button

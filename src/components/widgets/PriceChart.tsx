@@ -20,10 +20,11 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 interface PriceChartProps {
   symbol: string;
   interval?: "daily" | "weekly" | "monthly";
+  refreshInterval?: number;
 }
 
-export default function PriceChart({ symbol, interval = "daily" }: PriceChartProps) {
-  const { data, isLoading, error, refetch } = useTimeSeries(symbol, interval);
+export default function PriceChart({ symbol, interval = "daily", refreshInterval = 300000 }: PriceChartProps) {
+  const { data, isLoading, error, refetch } = useTimeSeries(symbol, interval, refreshInterval);
 
   if (isLoading) {
     return (
@@ -110,12 +111,18 @@ export default function PriceChart({ symbol, interval = "daily" }: PriceChartPro
     },
   };
 
+  const intervalLabels: Record<string, string> = {
+    daily: "30d",
+    weekly: "12w",
+    monthly: "12m",
+  };
+
   return (
     <div className="space-y-4">
       <div>
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-bold">${latest.close.toFixed(2)}</span>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">30d</span>
+          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">{intervalLabels[interval]}</span>
         </div>
         <div className={`flex items-center gap-1 mt-1 ${isPositive ? "text-accent" : "text-destructive"}`}>
           {isPositive ? <HiTrendingUp className="w-4 h-4" /> : <HiTrendingDown className="w-4 h-4" />}

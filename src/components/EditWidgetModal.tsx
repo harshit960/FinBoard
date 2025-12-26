@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { Widget, WidgetConfig } from "@/types";
-import { HiOutlineTrendingUp, HiOutlineTable, HiOutlineChartBar } from "react-icons/hi";
+import { HiOutlineTrendingUp, HiOutlineTable, HiOutlineChartBar, HiOutlineClock } from "react-icons/hi";
 
 interface EditWidgetModalProps {
   isOpen: boolean;
@@ -22,12 +22,14 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
   const [title, setTitle] = useState("");
   const [symbol, setSymbol] = useState("");
   const [chartInterval, setChartInterval] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [refreshInterval, setRefreshInterval] = useState(300);
 
   useEffect(() => {
     if (widget) {
       setTitle(widget.title);
       setSymbol(widget.config.symbol || "");
       setChartInterval(widget.config.chartInterval || "daily");
+      setRefreshInterval((widget.config.refreshInterval || 300000) / 1000);
     }
   }, [widget]);
 
@@ -41,7 +43,10 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
     if (!title.trim()) return;
     if (needsSymbol && !symbol.trim()) return;
 
-    const config: WidgetConfig = { ...widget.config };
+    const config: WidgetConfig = {
+      ...widget.config,
+      refreshInterval: refreshInterval * 1000,
+    };
     if (needsSymbol) {
       config.symbol = symbol.trim().toUpperCase();
     }
@@ -105,7 +110,7 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
         )}
 
         {isChart && (
-          <div className="mb-6">
+          <div className="mb-5">
             <label className="block text-sm font-medium mb-2">Time Interval</label>
             <div className="flex gap-2">
               {INTERVALS.map(({ value, label }) => (
@@ -125,6 +130,23 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
             </div>
           </div>
         )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-2">Refresh Interval</label>
+          <div className="relative">
+            <HiOutlineClock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="number"
+              min={30}
+              max={3600}
+              value={refreshInterval}
+              onChange={(e) => setRefreshInterval(Math.max(30, parseInt(e.target.value) || 300))}
+              className="w-full pl-11 pr-20 py-3 border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">seconds</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">Data refreshes automatically (min: 30s)</p>
+        </div>
 
         <div className="flex gap-3 pt-2">
           <button
@@ -146,4 +168,3 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
     </Modal>
   );
 }
-

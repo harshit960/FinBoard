@@ -48,7 +48,8 @@ interface UseTimeSeriesResult {
 
 export function useTimeSeries(
   symbol: string,
-  interval: "daily" | "weekly" | "monthly" = "daily"
+  interval: "daily" | "weekly" | "monthly" = "daily",
+  refreshInterval?: number
 ): UseTimeSeriesResult {
   const [data, setData] = useState<TimeSeriesData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +71,12 @@ export function useTimeSeries(
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    if (refreshInterval) {
+      const timer = setInterval(fetchData, refreshInterval);
+      return () => clearInterval(timer);
+    }
+  }, [fetchData, refreshInterval]);
 
   return { data, isLoading, error, refetch: fetchData };
 }
@@ -111,4 +117,3 @@ export function useTopGainers(refreshInterval?: number): UseTopGainersResult {
 
   return { data, isLoading, error, refetch: fetchData };
 }
-

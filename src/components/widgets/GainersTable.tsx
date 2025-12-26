@@ -7,8 +7,12 @@ import { HiOutlineExclamation, HiSearch, HiTrendingUp, HiChevronLeft, HiChevronR
 type SortField = "symbol" | "price" | "changePercent";
 type SortOrder = "asc" | "desc";
 
-export default function GainersTable() {
-  const { data, isLoading, error, refetch } = useTopGainers(300000);
+interface GainersTableProps {
+  refreshInterval?: number;
+}
+
+export default function GainersTable({ refreshInterval = 300000 }: GainersTableProps) {
+  const { data, isLoading, error, refetch } = useTopGainers(refreshInterval);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(5);

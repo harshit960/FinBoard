@@ -12,6 +12,8 @@ interface SortableWidgetProps {
   onEdit: (widget: Widget) => void;
 }
 
+const DEFAULT_REFRESH = 300000;
+
 export default function SortableWidget({ widget, onRemove, onEdit }: SortableWidgetProps) {
   const {
     attributes,
@@ -27,21 +29,23 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
     transition,
   };
 
+  const refreshInterval = widget.config.refreshInterval || DEFAULT_REFRESH;
+
   const renderContent = () => {
     switch (widget.type) {
       case "card":
         return widget.config.symbol ? (
-          <StockCard symbol={widget.config.symbol} />
+          <StockCard symbol={widget.config.symbol} refreshInterval={refreshInterval} />
         ) : (
           <div className="text-sm text-muted-foreground py-8 text-center">
             No symbol configured
           </div>
         );
       case "table":
-        return <GainersTable />;
+        return <GainersTable refreshInterval={refreshInterval} />;
       case "chart":
         return widget.config.symbol ? (
-          <PriceChart symbol={widget.config.symbol} interval={widget.config.chartInterval} />
+          <PriceChart symbol={widget.config.symbol} interval={widget.config.chartInterval} refreshInterval={refreshInterval} />
         ) : (
           <div className="text-sm text-muted-foreground py-8 text-center">
             No symbol configured
@@ -60,6 +64,15 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
     card: "Stock",
     table: "Table",
     chart: "Chart",
+  };
+
+  const formatRefresh = (ms: number) => {
+    const seconds = ms / 1000;
+    if (seconds >= 60) {
+      const mins = Math.floor(seconds / 60);
+      return `${mins}m`;
+    }
+    return `${seconds}s`;
   };
 
   return (
@@ -85,6 +98,7 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
               {widget.type === "chart" && widget.config.chartInterval && (
                 <span className="capitalize">{widget.config.chartInterval}</span>
               )}
+              <span>{formatRefresh(refreshInterval)}</span>
             </div>
           </div>
         </div>
