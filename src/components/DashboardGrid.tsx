@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Widget } from "@/types";
 import SortableWidget from "./SortableWidget";
+import { HiOutlineViewGrid } from "react-icons/hi";
 
 interface DashboardGridProps {
   widgets: Widget[];
@@ -45,17 +46,17 @@ export default function DashboardGrid({ widgets, onReorder, onRemove }: Dashboar
 
   if (widgets.length === 0) {
     return (
-      <div className="border border-dashed border-border rounded-xl p-12 md:p-16 text-center">
-        <div className="max-w-sm mx-auto">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">📊</span>
+      <div className="border-2 border-dashed border-border rounded-2xl py-20 px-8">
+        <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6">
+            <HiOutlineViewGrid className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="font-medium mb-2">No widgets yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Add your first widget to start tracking stocks, view market gainers, or monitor price charts.
+          <h3 className="text-xl font-semibold mb-3">No widgets yet</h3>
+          <p className="text-muted-foreground mb-6 leading-relaxed">
+            Start building your dashboard by adding widgets to track stocks, view market gainers, or monitor price charts.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Click the "Add Widget" button above to get started
+          <p className="text-sm text-muted-foreground">
+            Click <span className="font-medium text-foreground">&quot;Add Widget&quot;</span> to get started
           </p>
         </div>
       </div>
@@ -69,7 +70,7 @@ export default function DashboardGrid({ widgets, onReorder, onRemove }: Dashboar
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={widgets.map((w) => w.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {widgets.map((widget) => (
             <SortableWidget
               key={widget.id}

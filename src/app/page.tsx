@@ -17,32 +17,32 @@ export default function Home() {
 
   if (!hydrated) {
     return (
-      <main className="min-h-screen p-6 max-w-7xl mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">FinBoard</h1>
-            <p className="text-sm text-muted-foreground">Loading...</p>
-          </div>
-        </header>
-      </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen p-6 max-w-7xl mx-auto">
-      <Header widgetCount={widgets.length} onAddWidget={() => setIsModalOpen(true)} />
+    <div className="min-h-screen py-12 px-6">
+      <div className="max-w-6xl mx-auto">
+        <Header widgetCount={widgets.length} onAddWidget={() => setIsModalOpen(true)} />
 
-      <DashboardGrid
-        widgets={widgets}
-        onReorder={reorderWidgets}
-        onRemove={removeWidget}
-      />
+        <DashboardGrid
+          widgets={widgets}
+          onReorder={reorderWidgets}
+          onRemove={removeWidget}
+        />
+      </div>
 
       <AddWidgetModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddWidget}
       />
-    </main>
+    </div>
   );
 }
