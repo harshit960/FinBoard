@@ -74,7 +74,7 @@ Build a **Customizable Finance Dashboard** that allows users to:
 - [x] **Error States** — Clear error messages with retry option
 
 ### UI/UX
-- [x] **Light Theme** — Clean, professional design
+- [x] **Theme Switching** — Light, Dark, and System modes
 - [x] **Green Accent** 
 - [x] **Custom Logo** — FinBoard branding
 - [x] **Live Clock** — Current time in header
@@ -179,6 +179,7 @@ The dashboard features:
 | Error handling & retry | ✅ |
 | Resizable widgets | ✅ |
 | Lazy loading / code splitting | ✅ |
+| Dark mode / theme switching | ✅ |
 
 ## License
 

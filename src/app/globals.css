@@ -1,16 +1,44 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #f8f8f6;
-  --color-foreground: #1a1a1a;
-  --color-card: #ffffff;
-  --color-card-foreground: #1a1a1a;
-  --color-border: #e5e5e5;
-  --color-muted: #f3f3f3;
-  --color-muted-foreground: #6b6b6b;
-  --color-accent: #059669;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #dc2626;
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-fg);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-fg);
+  --color-destructive: var(--destructive);
+}
+
+/* Light theme (default) */
+:root {
+  --bg: #f8f8f6;
+  --fg: #1a1a1a;
+  --card: #ffffff;
+  --card-fg: #1a1a1a;
+  --border: #e5e5e5;
+  --muted: #f3f3f3;
+  --muted-fg: #6b6b6b;
+  --accent: #059669;
+  --accent-fg: #ffffff;
+  --destructive: #dc2626;
+}
+
+/* Dark theme */
+:root.dark {
+  --bg: #0a0a0a;
+  --fg: #fafafa;
+  --card: #171717;
+  --card-fg: #fafafa;
+  --border: #262626;
+  --muted: #262626;
+  --muted-fg: #a1a1a1;
+  --accent: #10b981;
+  --accent-fg: #ffffff;
+  --destructive: #ef4444;
 }
 
 html {
@@ -18,8 +46,8 @@ html {
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--bg);
+  color: var(--fg);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   min-height: 100vh;
   line-height: 1.5;
@@ -27,6 +55,6 @@ body {
 }
 
 ::selection {
-  background-color: var(--color-accent);
+  background-color: var(--accent);
   color: white;
 }
