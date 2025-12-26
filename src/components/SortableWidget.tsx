@@ -222,7 +222,6 @@ export default function SortableWidget({ widget, onRemove, onEdit, onResize }: S
           </div>
         </div>
         <div className="flex items-center gap-1 ml-2">
-          <span className="text-xs text-muted-foreground px-2">{displayCol}×{displayRow}</span>
           <button
             onClick={handleManualRefresh}
             disabled={isRefreshing}

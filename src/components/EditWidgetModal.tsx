@@ -35,6 +35,29 @@ const DISPLAY_TYPES: { value: DisplayType; label: string; icon: React.ReactNode;
   { value: "chart", label: "Chart", icon: <HiOutlineChartBar className="w-5 h-5" />, description: "Line chart from time-series data" },
 ];
 
+const POPULAR_STOCKS = [
+  { symbol: "AAPL", name: "Apple Inc." },
+  { symbol: "MSFT", name: "Microsoft" },
+  { symbol: "GOOGL", name: "Alphabet (Google)" },
+  { symbol: "AMZN", name: "Amazon" },
+  { symbol: "NVDA", name: "NVIDIA" },
+  { symbol: "META", name: "Meta (Facebook)" },
+  { symbol: "TSLA", name: "Tesla" },
+  { symbol: "JPM", name: "JPMorgan Chase" },
+  { symbol: "V", name: "Visa" },
+  { symbol: "WMT", name: "Walmart" },
+  { symbol: "JNJ", name: "Johnson & Johnson" },
+  { symbol: "MA", name: "Mastercard" },
+  { symbol: "PG", name: "Procter & Gamble" },
+  { symbol: "UNH", name: "UnitedHealth" },
+  { symbol: "HD", name: "Home Depot" },
+  { symbol: "DIS", name: "Disney" },
+  { symbol: "NFLX", name: "Netflix" },
+  { symbol: "PYPL", name: "PayPal" },
+  { symbol: "INTC", name: "Intel" },
+  { symbol: "AMD", name: "AMD" },
+];
+
 function findArrayPaths(obj: unknown, currentPath: string[] = []): string[][] {
   const paths: string[][] = [];
   if (Array.isArray(obj) && obj.length > 0) {
@@ -275,13 +298,29 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
         {needsSymbol && (
           <div className="mb-5">
             <label className="block text-sm font-medium mb-2">Stock Symbol</label>
-            <input
-              type="text"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              placeholder="e.g., AAPL, MSFT, GOOGL"
-              className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all uppercase"
-            />
+            <div className="space-y-2">
+              <select
+                value={POPULAR_STOCKS.some(s => s.symbol === symbol.toUpperCase()) ? symbol.toUpperCase() : ""}
+                onChange={(e) => setSymbol(e.target.value)}
+                className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all cursor-pointer"
+              >
+                <option value="">Popular stocks...</option>
+                {POPULAR_STOCKS.map((stock) => (
+                  <option key={stock.symbol} value={stock.symbol}>
+                    {stock.symbol} — {stock.name}
+                  </option>
+                ))}
+              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={symbol}
+                  onChange={(e) => setSymbol(e.target.value)}
+                  placeholder="Or type any symbol"
+                  className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all uppercase"
+                />
+              </div>
+            </div>
           </div>
         )}
 
