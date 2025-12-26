@@ -8,6 +8,7 @@ interface DashboardStore {
   removeWidget: (id: string) => void;
   updateWidget: (id: string, updates: Partial<Widget>) => void;
   reorderWidgets: (widgets: Widget[]) => void;
+  importWidgets: (widgets: Widget[]) => void;
   clearAll: () => void;
 }
 
@@ -43,6 +44,10 @@ export const useDashboardStore = create<DashboardStore>()(
       },
 
       reorderWidgets: (widgets) => {
+        set({ widgets });
+      },
+
+      importWidgets: (widgets) => {
         set({ widgets });
       },
 

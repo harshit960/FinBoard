@@ -180,6 +180,7 @@ The dashboard features:
 | Resizable widgets | ✅ |
 | Lazy loading / code splitting | ✅ |
 | Dark mode / theme switching | ✅ |
+| Config backup (export/import) | ✅ |
 
 ## License
 
