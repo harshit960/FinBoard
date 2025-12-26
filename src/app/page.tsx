@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Header, DashboardGrid, AddWidgetModal, EditWidgetModal } from "@/components";
+import { useState, Suspense } from "react";
+import dynamic from "next/dynamic";
+import { Header, DashboardGrid } from "@/components";
 import { useDashboardStore } from "@/store";
 import { useHydration } from "@/hooks";
 import { Widget, WidgetType, WidgetConfig } from "@/types";
+
+// Lazy load modals - only loaded when opened
+const AddWidgetModal = dynamic(() => import("@/components/AddWidgetModal"), {
+  loading: () => null,
+  ssr: false,
+});
+
+const EditWidgetModal = dynamic(() => import("@/components/EditWidgetModal"), {
+  loading: () => null,
+  ssr: false,
+});
 
 export default function Home() {
   const hydrated = useHydration();
@@ -49,18 +61,27 @@ export default function Home() {
         />
       </div>
 
-      <AddWidgetModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddWidget}
-      />
+      {/* Modals are lazy loaded */}
+      {isAddModalOpen && (
+        <Suspense fallback={null}>
+          <AddWidgetModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onAdd={handleAddWidget}
+          />
+        </Suspense>
+      )}
 
-      <EditWidgetModal
-        isOpen={!!editingWidget}
-        onClose={() => setEditingWidget(null)}
-        widget={editingWidget}
-        onSave={handleEditWidget}
-      />
+      {editingWidget && (
+        <Suspense fallback={null}>
+          <EditWidgetModal
+            isOpen={!!editingWidget}
+            onClose={() => setEditingWidget(null)}
+            widget={editingWidget}
+            onSave={handleEditWidget}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

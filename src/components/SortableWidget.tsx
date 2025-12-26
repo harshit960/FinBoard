@@ -1,11 +1,58 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Widget } from "@/types";
-import { StockCard, GainersTable, PriceChart, CustomWidget } from "./widgets";
 import { HiX, HiOutlineDotsVertical, HiPencil, HiOutlineRefresh } from "react-icons/hi";
+
+// Lazy load widget components
+const StockCard = dynamic(() => import("./widgets/StockCard"), {
+  loading: () => <WidgetSkeleton />,
+  ssr: false,
+});
+
+const GainersTable = dynamic(() => import("./widgets/GainersTable"), {
+  loading: () => <WidgetSkeleton rows={5} />,
+  ssr: false,
+});
+
+const PriceChart = dynamic(() => import("./widgets/PriceChart"), {
+  loading: () => <WidgetSkeleton type="chart" />,
+  ssr: false,
+});
+
+const CustomWidget = dynamic(() => import("./widgets/CustomWidget"), {
+  loading: () => <WidgetSkeleton />,
+  ssr: false,
+});
+
+// Loading skeleton component
+function WidgetSkeleton({ rows = 3, type = "default" }: { rows?: number; type?: string }) {
+  if (type === "chart") {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="flex items-baseline gap-2">
+          <div className="h-8 bg-muted rounded w-24" />
+          <div className="h-4 bg-muted rounded w-16" />
+        </div>
+        <div className="h-40 bg-muted rounded" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 animate-pulse">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex justify-between items-center">
+          <div className="h-4 bg-muted rounded w-20" />
+          <div className="h-5 bg-muted rounded w-24" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface SortableWidgetProps {
   widget: Widget;
@@ -114,17 +161,25 @@ export default function SortableWidget({ widget, onRemove, onEdit, onResize }: S
     switch (widget.type) {
       case "card":
         return widget.config.symbol ? (
-          <StockCard key={refreshKey} symbol={widget.config.symbol} refreshInterval={refreshInterval} />
+          <Suspense fallback={<WidgetSkeleton />}>
+            <StockCard key={refreshKey} symbol={widget.config.symbol} refreshInterval={refreshInterval} />
+          </Suspense>
         ) : (
           <div className="text-sm text-muted-foreground py-8 text-center">
             No symbol configured
           </div>
         );
       case "table":
-        return <GainersTable key={refreshKey} refreshInterval={refreshInterval} />;
+        return (
+          <Suspense fallback={<WidgetSkeleton rows={5} />}>
+            <GainersTable key={refreshKey} refreshInterval={refreshInterval} />
+          </Suspense>
+        );
       case "chart":
         return widget.config.symbol ? (
-          <PriceChart key={refreshKey} symbol={widget.config.symbol} interval={widget.config.chartInterval} refreshInterval={refreshInterval} />
+          <Suspense fallback={<WidgetSkeleton type="chart" />}>
+            <PriceChart key={refreshKey} symbol={widget.config.symbol} interval={widget.config.chartInterval} refreshInterval={refreshInterval} />
+          </Suspense>
         ) : (
           <div className="text-sm text-muted-foreground py-8 text-center">
             No symbol configured
@@ -132,7 +187,9 @@ export default function SortableWidget({ widget, onRemove, onEdit, onResize }: S
         );
       case "custom":
         return widget.config.customApi ? (
-          <CustomWidget key={refreshKey} config={widget.config.customApi} refreshInterval={refreshInterval} />
+          <Suspense fallback={<WidgetSkeleton />}>
+            <CustomWidget key={refreshKey} config={widget.config.customApi} refreshInterval={refreshInterval} />
+          </Suspense>
         ) : (
           <div className="text-sm text-muted-foreground py-8 text-center">
             No API configured

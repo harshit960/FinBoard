@@ -28,6 +28,7 @@ Build a **Customizable Finance Dashboard** that allows users to:
 - [x] **Resizable Widgets** — Drag corner handle to resize (1×1, 2×1, 3×1, 1×2, 2×2, 3×2)
 - [x] **Persistent Storage** — Dashboard state saved to localStorage
 - [x] **Responsive Grid** — Adapts to screen size
+- [x] **Lazy Loading** — Widgets and modals load on demand for faster initial load
 
 ### Widget Types
 
@@ -177,6 +178,7 @@ The dashboard features:
 | Widget edit/config panel | ✅ |
 | Error handling & retry | ✅ |
 | Resizable widgets | ✅ |
+| Lazy loading / code splitting | ✅ |
 
 ## License
 
