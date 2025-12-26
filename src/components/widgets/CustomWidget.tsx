@@ -138,6 +138,17 @@ function TableView({ data, config }: { data: unknown; config: CustomApiConfig })
 }
 
 function ChartView({ data, config }: { data: unknown; config: CustomApiConfig }) {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains("dark"));
+    checkDark();
+    
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   const arrayData = config.arrayPath ? getValueByPath(data, config.arrayPath) : data;
 
   if (!Array.isArray(arrayData) || arrayData.length === 0 || !config.chartConfig) {
@@ -180,13 +191,16 @@ function ChartView({ data, config }: { data: unknown; config: CustomApiConfig })
     ],
   };
 
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "#f3f3f3";
+  const tickColor = isDark ? "#a1a1a1" : "#6b6b6b";
+
   const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#1a1a1a",
+        backgroundColor: isDark ? "#262626" : "#1a1a1a",
         titleColor: "#ffffff",
         bodyColor: "#ffffff",
         padding: 12,
@@ -197,12 +211,12 @@ function ChartView({ data, config }: { data: unknown; config: CustomApiConfig })
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: "#6b6b6b", maxTicksLimit: 5, font: { size: 11 } },
+        ticks: { color: tickColor, maxTicksLimit: 5, font: { size: 11 } },
         border: { display: false },
       },
       y: {
-        grid: { color: "#f3f3f3" },
-        ticks: { color: "#6b6b6b", font: { size: 11 } },
+        grid: { color: gridColor },
+        ticks: { color: tickColor, font: { size: 11 } },
         border: { display: false },
       },
     },
@@ -279,12 +293,10 @@ export default function CustomWidget({ config, refreshInterval = 300000 }: Custo
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch");
       
-      // Auto-retry after 3s if under max retries
       if (retryCount.current < MAX_RETRIES) {
         retryCount.current++;
         setRetryIn(Math.ceil(RETRY_DELAY / 1000));
         
-        // Countdown timer
         countdownInterval.current = setInterval(() => {
           setRetryIn((prev) => (prev && prev > 1 ? prev - 1 : null));
         }, 1000);

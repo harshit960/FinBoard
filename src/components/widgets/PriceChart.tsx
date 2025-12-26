@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTimeSeries } from "@/hooks";
 import { HiOutlineExclamation, HiTrendingUp, HiTrendingDown } from "react-icons/hi";
 import {
@@ -25,6 +26,16 @@ interface PriceChartProps {
 
 export default function PriceChart({ symbol, interval = "daily", refreshInterval = 300000 }: PriceChartProps) {
   const { data, isLoading, error, refetch } = useTimeSeries(symbol, interval, refreshInterval);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains("dark"));
+    checkDark();
+    
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   if (isLoading) {
     return (
@@ -69,13 +80,16 @@ export default function PriceChart({ symbol, interval = "daily", refreshInterval
     ],
   };
 
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "#f3f3f3";
+  const tickColor = isDark ? "#a1a1a1" : "#6b6b6b";
+
   const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#1a1a1a",
+        backgroundColor: isDark ? "#262626" : "#1a1a1a",
         titleColor: "#ffffff",
         bodyColor: "#ffffff",
         padding: 12,
@@ -93,16 +107,16 @@ export default function PriceChart({ symbol, interval = "daily", refreshInterval
       x: {
         grid: { display: false },
         ticks: {
-          color: "#6b6b6b",
+          color: tickColor,
           maxTicksLimit: 5,
           font: { size: 11 },
         },
         border: { display: false },
       },
       y: {
-        grid: { color: "#f3f3f3" },
+        grid: { color: gridColor },
         ticks: {
-          color: "#6b6b6b",
+          color: tickColor,
           callback: (value) => `$${value}`,
           font: { size: 11 },
         },
