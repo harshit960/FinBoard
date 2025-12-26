@@ -47,7 +47,17 @@ export function validateBackup(data: unknown): { valid: boolean; error?: string;
     }
   }
 
-  return { valid: true, config: backup as DashboardBackup };
+  const config: DashboardBackup = {
+    version: backup.version,
+    exportedAt: typeof backup.exportedAt === "string" ? backup.exportedAt : new Date().toISOString(),
+    widgets: backup.widgets as Widget[],
+  };
+
+  if (typeof backup.theme === "string" && ["light", "dark", "system"].includes(backup.theme)) {
+    config.theme = backup.theme as "light" | "dark" | "system";
+  }
+
+  return { valid: true, config };
 }
 
 export function exportDashboard(widgets: Widget[], theme?: string): void {
