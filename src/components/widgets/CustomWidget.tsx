@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { CustomApiConfig } from "@/types";
 import { HiOutlineExclamation, HiOutlineRefresh } from "react-icons/hi";
 import {
@@ -16,6 +16,9 @@ import {
 import { Line } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
+
+const RETRY_DELAY = 3000;
+const MAX_RETRIES = 3;
 
 interface CustomWidgetProps {
   config: CustomApiConfig;
@@ -62,7 +65,6 @@ function formatValue(value: unknown, format?: string): string {
 }
 
 function CardView({ data, config }: { data: unknown; config: CustomApiConfig }) {
-  // Get the data source - if arrayPath is set, get that item
   let sourceData = data;
   
   if (config.arrayPath && config.arrayPath.length > 0) {
@@ -76,7 +78,6 @@ function CardView({ data, config }: { data: unknown; config: CustomApiConfig }) 
   return (
     <div className="space-y-3">
       {config.fields.map((field) => {
-        // For card view, field.path contains just the field name
         const value = typeof sourceData === "object" && sourceData !== null
           ? (sourceData as Record<string, unknown>)[field.label]
           : undefined;
@@ -231,6 +232,10 @@ export default function CustomWidget({ config, refreshInterval = 300000 }: Custo
   const [data, setData] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryIn, setRetryIn] = useState<number | null>(null);
+  const retryCount = useRef(0);
+  const retryTimeout = useRef<NodeJS.Timeout | null>(null);
+  const countdownInterval = useRef<NodeJS.Timeout | null>(null);
 
   const buildFetchUrl = useCallback(() => {
     if (config.auth.type === "query_param" && config.auth.key && config.auth.value) {
@@ -252,9 +257,13 @@ export default function CustomWidget({ config, refreshInterval = 300000 }: Custo
     return headers;
   }, [config.auth]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isRetry = false) => {
     setIsLoading(true);
-    setError(null);
+    if (!isRetry) {
+      setError(null);
+      retryCount.current = 0;
+    }
+    setRetryIn(null);
 
     try {
       const response = await fetch(buildFetchUrl(), {
@@ -265,8 +274,26 @@ export default function CustomWidget({ config, refreshInterval = 300000 }: Custo
       }
       const json = await response.json();
       setData(json);
+      setError(null);
+      retryCount.current = 0;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch");
+      
+      // Auto-retry after 3s if under max retries
+      if (retryCount.current < MAX_RETRIES) {
+        retryCount.current++;
+        setRetryIn(Math.ceil(RETRY_DELAY / 1000));
+        
+        // Countdown timer
+        countdownInterval.current = setInterval(() => {
+          setRetryIn((prev) => (prev && prev > 1 ? prev - 1 : null));
+        }, 1000);
+        
+        retryTimeout.current = setTimeout(() => {
+          if (countdownInterval.current) clearInterval(countdownInterval.current);
+          fetchData(true);
+        }, RETRY_DELAY);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -276,9 +303,18 @@ export default function CustomWidget({ config, refreshInterval = 300000 }: Custo
     fetchData();
 
     if (refreshInterval) {
-      const interval = setInterval(fetchData, refreshInterval);
-      return () => clearInterval(interval);
+      const interval = setInterval(() => fetchData(), refreshInterval);
+      return () => {
+        clearInterval(interval);
+        if (retryTimeout.current) clearTimeout(retryTimeout.current);
+        if (countdownInterval.current) clearInterval(countdownInterval.current);
+      };
     }
+
+    return () => {
+      if (retryTimeout.current) clearTimeout(retryTimeout.current);
+      if (countdownInterval.current) clearInterval(countdownInterval.current);
+    };
   }, [fetchData, refreshInterval]);
 
   if (isLoading && !data) {
@@ -294,20 +330,26 @@ export default function CustomWidget({ config, refreshInterval = 300000 }: Custo
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="text-center py-6">
         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
           <HiOutlineExclamation className="w-5 h-5 text-muted-foreground" />
         </div>
         <p className="text-sm text-muted-foreground mb-2">{error}</p>
-        <button
-          onClick={fetchData}
-          className="text-sm text-accent hover:underline font-medium inline-flex items-center gap-1"
-        >
-          <HiOutlineRefresh className="w-3 h-3" />
-          Retry
-        </button>
+        {retryIn ? (
+          <p className="text-xs text-muted-foreground">
+            Retrying in {retryIn}s... ({retryCount.current}/{MAX_RETRIES})
+          </p>
+        ) : retryCount.current >= MAX_RETRIES ? (
+          <button
+            onClick={() => fetchData()}
+            className="text-sm text-accent hover:underline font-medium inline-flex items-center gap-1"
+          >
+            <HiOutlineRefresh className="w-3 h-3" />
+            Retry
+          </button>
+        ) : null}
       </div>
     );
   }
