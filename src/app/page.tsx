@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { Header, DashboardGrid, AddWidgetModal } from "@/components";
 import { useDashboardStore } from "@/store";
-import { WidgetType } from "@/types";
+import { WidgetType, WidgetConfig } from "@/types";
 
 export default function Home() {
   const { widgets, addWidget, removeWidget, reorderWidgets } = useDashboardStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAddWidget = (type: WidgetType, title: string) => {
-    addWidget(type, title);
+  const handleAddWidget = (type: WidgetType, title: string, config: WidgetConfig) => {
+    addWidget(type, title, config);
   };
 
   return (

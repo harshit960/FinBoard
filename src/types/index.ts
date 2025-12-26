@@ -1,5 +1,11 @@
 export type WidgetType = "table" | "card" | "chart";
 
+export interface WidgetConfig {
+  symbol?: string;
+  refreshInterval?: number;
+  chartInterval?: "daily" | "weekly" | "monthly";
+}
+
 export interface Widget {
   id: string;
   type: WidgetType;
@@ -9,15 +15,7 @@ export interface Widget {
   size: { width: number; height: number };
 }
 
-export interface WidgetConfig {
-  apiEndpoint?: string;
-  refreshInterval?: number;
-  fields?: string[];
-  chartType?: "line" | "candle";
-}
-
 export interface DashboardState {
   widgets: Widget[];
   isLoading: boolean;
 }
-

@@ -2,3 +2,4 @@ FinBoard -web Intern Assignment (2).pdf
 .next
 node_modules
 .env*.local
+.env

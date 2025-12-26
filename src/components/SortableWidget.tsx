@@ -3,6 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Widget } from "@/types";
+import { StockCard, GainersTable, PriceChart } from "./widgets";
 
 interface SortableWidgetProps {
   widget: Widget;
@@ -24,6 +25,27 @@ export default function SortableWidget({ widget, onRemove }: SortableWidgetProps
     transition,
   };
 
+  const renderContent = () => {
+    switch (widget.type) {
+      case "card":
+        return widget.config.symbol ? (
+          <StockCard symbol={widget.config.symbol} />
+        ) : (
+          <div className="text-sm text-muted-foreground">No symbol configured</div>
+        );
+      case "table":
+        return <GainersTable />;
+      case "chart":
+        return widget.config.symbol ? (
+          <PriceChart symbol={widget.config.symbol} interval={widget.config.chartInterval} />
+        ) : (
+          <div className="text-sm text-muted-foreground">No symbol configured</div>
+        );
+      default:
+        return <div className="text-sm text-muted-foreground">Unknown widget type</div>;
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -40,6 +62,9 @@ export default function SortableWidget({ widget, onRemove }: SortableWidgetProps
         >
           <span className="text-muted-foreground">⋮⋮</span>
           <h3 className="font-medium text-card-foreground">{widget.title}</h3>
+          {widget.config.symbol && (
+            <span className="text-xs text-muted-foreground">({widget.config.symbol})</span>
+          )}
         </div>
         <button
           onClick={() => onRemove(widget.id)}
@@ -49,12 +74,7 @@ export default function SortableWidget({ widget, onRemove }: SortableWidgetProps
         </button>
       </div>
 
-      <div className="p-4 text-sm text-muted-foreground min-h-[120px]">
-        <span className="inline-block px-2 py-1 bg-muted rounded text-xs">
-          {widget.type}
-        </span>
-      </div>
+      <div className="p-4">{renderContent()}</div>
     </div>
   );
 }
-

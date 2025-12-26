@@ -4,3 +4,4 @@ export { default as WidgetCard } from "./WidgetCard";
 export { default as SortableWidget } from "./SortableWidget";
 export { default as Modal } from "./Modal";
 export { default as AddWidgetModal } from "./AddWidgetModal";
+export * from "./widgets";

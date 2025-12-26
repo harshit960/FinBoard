@@ -2,36 +2,50 @@
 
 import { useState } from "react";
 import Modal from "./Modal";
-import { WidgetType } from "@/types";
+import { WidgetType, WidgetConfig } from "@/types";
 
 interface AddWidgetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (type: WidgetType, title: string) => void;
+  onAdd: (type: WidgetType, title: string, config: WidgetConfig) => void;
 }
 
-const WIDGET_TYPES: { type: WidgetType; label: string; description: string }[] = [
-  { type: "card", label: "Finance Card", description: "Display key metrics and stats" },
-  { type: "table", label: "Data Table", description: "Paginated list with search & filters" },
-  { type: "chart", label: "Chart", description: "Line or candlestick price charts" },
+const WIDGET_TYPES: { type: WidgetType; label: string; description: string; needsSymbol: boolean }[] = [
+  { type: "card", label: "Stock Card", description: "Display price & stats for a stock", needsSymbol: true },
+  { type: "table", label: "Top Gainers", description: "Table of top gaining stocks", needsSymbol: false },
+  { type: "chart", label: "Price Chart", description: "Line chart showing price history", needsSymbol: true },
 ];
 
 export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModalProps) {
   const [selectedType, setSelectedType] = useState<WidgetType>("card");
   const [title, setTitle] = useState("");
+  const [symbol, setSymbol] = useState("");
+
+  const selectedWidget = WIDGET_TYPES.find((w) => w.type === selectedType);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd(selectedType, title.trim());
-    setTitle("");
-    setSelectedType("card");
+    if (selectedWidget?.needsSymbol && !symbol.trim()) return;
+
+    const config: WidgetConfig = {};
+    if (selectedWidget?.needsSymbol) {
+      config.symbol = symbol.trim().toUpperCase();
+    }
+
+    onAdd(selectedType, title.trim(), config);
+    resetForm();
     onClose();
   };
 
-  const handleClose = () => {
+  const resetForm = () => {
     setTitle("");
+    setSymbol("");
     setSelectedType("card");
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -67,16 +81,29 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Widget Title</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., My Watchlist"
+            placeholder="e.g., Apple Stock"
             className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
           />
         </div>
+
+        {selectedWidget?.needsSymbol && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">Stock Symbol</label>
+            <input
+              type="text"
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value)}
+              placeholder="e.g., AAPL, MSFT, GOOGL"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent uppercase"
+            />
+          </div>
+        )}
 
         <div className="flex gap-3 justify-end">
           <button
@@ -88,7 +115,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
           </button>
           <button
             type="submit"
-            disabled={!title.trim()}
+            disabled={!title.trim() || (selectedWidget?.needsSymbol && !symbol.trim())}
             className="px-4 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add Widget
@@ -98,4 +125,3 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
     </Modal>
   );
 }
-
