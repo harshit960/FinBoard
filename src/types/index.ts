@@ -2,6 +2,8 @@ export type WidgetType = "table" | "card" | "chart" | "custom";
 
 export type AuthType = "none" | "query_param" | "header" | "bearer";
 
+export type DisplayType = "card" | "table" | "chart";
+
 export interface AuthConfig {
   type: AuthType;
   key?: string;
@@ -14,10 +16,20 @@ export interface FieldMapping {
   format?: "text" | "currency" | "percent" | "number";
 }
 
+export interface ChartConfig {
+  xAxisPath: string[];
+  yAxisPath: string[];
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+}
+
 export interface CustomApiConfig {
   url: string;
   auth: AuthConfig;
+  displayType: DisplayType;
   fields: FieldMapping[];
+  arrayPath?: string[];
+  chartConfig?: ChartConfig;
 }
 
 export interface WidgetConfig {

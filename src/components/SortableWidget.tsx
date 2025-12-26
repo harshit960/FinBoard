@@ -3,7 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Widget } from "@/types";
-import { StockCard, GainersTable, PriceChart } from "./widgets";
+import { StockCard, GainersTable, PriceChart, CustomWidget } from "./widgets";
 import { HiX, HiOutlineDotsVertical, HiPencil } from "react-icons/hi";
 
 interface SortableWidgetProps {
@@ -51,6 +51,14 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
             No symbol configured
           </div>
         );
+      case "custom":
+        return widget.config.customApi ? (
+          <CustomWidget config={widget.config.customApi} refreshInterval={refreshInterval} />
+        ) : (
+          <div className="text-sm text-muted-foreground py-8 text-center">
+            No API configured
+          </div>
+        );
       default:
         return (
           <div className="text-sm text-muted-foreground py-8 text-center">
@@ -64,6 +72,7 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
     card: "Stock",
     table: "Table",
     chart: "Chart",
+    custom: "API",
   };
 
   const formatRefresh = (ms: number) => {
@@ -73,6 +82,19 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
       return `${mins}m`;
     }
     return `${seconds}s`;
+  };
+
+  const getSubtitle = () => {
+    if (widget.config.symbol) return widget.config.symbol;
+    if (widget.config.customApi) {
+      try {
+        const url = new URL(widget.config.customApi.url);
+        return url.hostname;
+      } catch {
+        return "Custom";
+      }
+    }
+    return null;
   };
 
   return (
@@ -94,7 +116,7 @@ export default function SortableWidget({ widget, onRemove, onEdit }: SortableWid
             <h3 className="font-semibold text-card-foreground truncate">{widget.title}</h3>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="px-1.5 py-0.5 bg-muted rounded">{typeLabels[widget.type]}</span>
-              {widget.config.symbol && <span>{widget.config.symbol}</span>}
+              {getSubtitle() && <span className="truncate max-w-[100px]">{getSubtitle()}</span>}
               {widget.type === "chart" && widget.config.chartInterval && (
                 <span className="capitalize">{widget.config.chartInterval}</span>
               )}
