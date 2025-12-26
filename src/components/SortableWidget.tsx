@@ -4,14 +4,15 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Widget } from "@/types";
 import { StockCard, GainersTable, PriceChart } from "./widgets";
-import { HiX, HiOutlineDotsVertical } from "react-icons/hi";
+import { HiX, HiOutlineDotsVertical, HiPencil } from "react-icons/hi";
 
 interface SortableWidgetProps {
   widget: Widget;
   onRemove: (id: string) => void;
+  onEdit: (widget: Widget) => void;
 }
 
-export default function SortableWidget({ widget, onRemove }: SortableWidgetProps) {
+export default function SortableWidget({ widget, onRemove, onEdit }: SortableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -81,16 +82,28 @@ export default function SortableWidget({ widget, onRemove }: SortableWidgetProps
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="px-1.5 py-0.5 bg-muted rounded">{typeLabels[widget.type]}</span>
               {widget.config.symbol && <span>{widget.config.symbol}</span>}
+              {widget.type === "chart" && widget.config.chartInterval && (
+                <span className="capitalize">{widget.config.chartInterval}</span>
+              )}
             </div>
           </div>
         </div>
-        <button
-          onClick={() => onRemove(widget.id)}
-          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors p-2 rounded-lg ml-2"
-          title="Remove widget"
-        >
-          <HiX className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1 ml-2">
+          <button
+            onClick={() => onEdit(widget)}
+            className="text-muted-foreground hover:text-foreground hover:bg-muted transition-colors p-2 rounded-lg"
+            title="Edit widget"
+          >
+            <HiPencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onRemove(widget.id)}
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors p-2 rounded-lg"
+            title="Remove widget"
+          >
+            <HiX className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="p-5">{renderContent()}</div>

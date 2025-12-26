@@ -23,9 +23,10 @@ interface DashboardGridProps {
   widgets: Widget[];
   onReorder: (widgets: Widget[]) => void;
   onRemove: (id: string) => void;
+  onEdit: (widget: Widget) => void;
 }
 
-export default function DashboardGrid({ widgets, onReorder, onRemove }: DashboardGridProps) {
+export default function DashboardGrid({ widgets, onReorder, onRemove, onEdit }: DashboardGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -76,6 +77,7 @@ export default function DashboardGrid({ widgets, onReorder, onRemove }: Dashboar
               key={widget.id}
               widget={widget}
               onRemove={onRemove}
+              onEdit={onEdit}
             />
           ))}
         </div>

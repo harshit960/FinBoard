@@ -1,18 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Header, DashboardGrid, AddWidgetModal } from "@/components";
+import { Header, DashboardGrid, AddWidgetModal, EditWidgetModal } from "@/components";
 import { useDashboardStore } from "@/store";
 import { useHydration } from "@/hooks";
-import { WidgetType, WidgetConfig } from "@/types";
+import { Widget, WidgetType, WidgetConfig } from "@/types";
 
 export default function Home() {
   const hydrated = useHydration();
-  const { widgets, addWidget, removeWidget, reorderWidgets } = useDashboardStore();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { widgets, addWidget, removeWidget, updateWidget, reorderWidgets } = useDashboardStore();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 
   const handleAddWidget = (type: WidgetType, title: string, config: WidgetConfig) => {
     addWidget(type, title, config);
+  };
+
+  const handleEditWidget = (id: string, updates: { title: string; config: WidgetConfig }) => {
+    updateWidget(id, updates);
   };
 
   if (!hydrated) {
@@ -29,19 +34,27 @@ export default function Home() {
   return (
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-6xl mx-auto">
-        <Header widgetCount={widgets.length} onAddWidget={() => setIsModalOpen(true)} />
+        <Header widgetCount={widgets.length} onAddWidget={() => setIsAddModalOpen(true)} />
 
         <DashboardGrid
           widgets={widgets}
           onReorder={reorderWidgets}
           onRemove={removeWidget}
+          onEdit={setEditingWidget}
         />
       </div>
 
       <AddWidgetModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddWidget}
+      />
+
+      <EditWidgetModal
+        isOpen={!!editingWidget}
+        onClose={() => setEditingWidget(null)}
+        widget={editingWidget}
+        onSave={handleEditWidget}
       />
     </div>
   );
