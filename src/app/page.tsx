@@ -1,26 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { Header, DashboardGrid, WidgetCard } from "@/components";
-import { Widget } from "@/types";
+import { useDashboardStore } from "@/store";
 
 export default function Home() {
-  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const { widgets, addWidget, removeWidget } = useDashboardStore();
 
   const handleAddWidget = () => {
-    const newWidget: Widget = {
-      id: crypto.randomUUID(),
-      type: "card",
-      title: `Widget ${widgets.length + 1}`,
-      config: {},
-      position: { x: 0, y: 0 },
-      size: { width: 1, height: 1 },
-    };
-    setWidgets([...widgets, newWidget]);
-  };
-
-  const handleRemoveWidget = (id: string) => {
-    setWidgets(widgets.filter((w) => w.id !== id));
+    addWidget("card", `Widget ${widgets.length + 1}`);
   };
 
   return (
@@ -32,7 +19,7 @@ export default function Home() {
           <WidgetCard
             key={widget.id}
             widget={widget}
-            onRemove={handleRemoveWidget}
+            onRemove={removeWidget}
           />
         ))}
       </DashboardGrid>
