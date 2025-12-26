@@ -30,7 +30,7 @@ const AUTH_TYPES: { value: AuthType; label: string }[] = [
 ];
 
 const DISPLAY_TYPES: { value: DisplayType; label: string; icon: React.ReactNode; description: string }[] = [
-  { value: "card", label: "Card", icon: <HiOutlineTrendingUp className="w-5 h-5" />, description: "Key-value pairs from a single object" },
+  { value: "card", label: "Card", icon: <HiOutlineTrendingUp className="w-5 h-5" />, description: "Key-value pairs (single object or first item from array)" },
   { value: "table", label: "Table", icon: <HiOutlineTable className="w-5 h-5" />, description: "Rows from an array of items" },
   { value: "chart", label: "Chart", icon: <HiOutlineChartBar className="w-5 h-5" />, description: "Line chart from time-series data" },
 ];
@@ -68,6 +68,15 @@ function getObjectKeys(obj: unknown): string[] {
   return [];
 }
 
+function isResponseArray(obj: unknown): boolean {
+  if (Array.isArray(obj)) return true;
+  if (typeof obj === "object" && obj !== null) {
+    const values = Object.values(obj);
+    return values.some(v => Array.isArray(v));
+  }
+  return false;
+}
+
 export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModalProps) {
   const [selectedType, setSelectedType] = useState<WidgetType>("card");
   const [title, setTitle] = useState("");
@@ -87,6 +96,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
   const [displayType, setDisplayType] = useState<DisplayType>("card");
   const [selectedFields, setSelectedFields] = useState<FieldMapping[]>([]);
   const [arrayPath, setArrayPath] = useState<string[]>([]);
+  const [itemIndex, setItemIndex] = useState(0);
   const [xAxisField, setXAxisField] = useState("");
   const [yAxisField, setYAxisField] = useState("");
 
@@ -94,8 +104,24 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
   const isCustom = selectedType === "custom";
 
   const availableArrayPaths = apiResponse ? findArrayPaths(apiResponse) : [];
+  const hasArrays = availableArrayPaths.length > 0;
+  
+  // Get the data source based on array path
   const arrayData = arrayPath.length > 0 ? getValueByPath(apiResponse, arrayPath) : null;
-  const availableFields = arrayData ? getObjectKeys(arrayData) : (apiResponse ? getObjectKeys(apiResponse) : []);
+  const arrayLength = Array.isArray(arrayData) ? arrayData.length : 0;
+  
+  // For card mode: get fields from first item if array selected, else from root
+  const getFieldsSource = () => {
+    if (displayType === "card") {
+      if (arrayPath.length > 0 && Array.isArray(arrayData) && arrayData.length > 0) {
+        return arrayData[0];
+      }
+      return apiResponse;
+    }
+    return arrayData;
+  };
+  
+  const availableFields = getObjectKeys(getFieldsSource());
 
   const buildFetchUrl = () => {
     if (authType === "query_param" && authKey && authValue) {
@@ -124,6 +150,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
     setApiResponse(null);
     setSelectedFields([]);
     setArrayPath([]);
+    setItemIndex(0);
     setXAxisField("");
     setYAxisField("");
 
@@ -148,8 +175,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
     if (exists) {
       setSelectedFields(selectedFields.filter((f) => f.label !== field));
     } else {
-      const path = displayType === "card" ? [field] : [...arrayPath, "0", field];
-      setSelectedFields([...selectedFields, { path, label: field, format: "text" }]);
+      setSelectedFields([...selectedFields, { path: [field], label: field, format: "text" }]);
     }
   };
 
@@ -174,7 +200,8 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
           auth: { type: authType, key: authKey, value: authValue },
           displayType,
           fields: selectedFields,
-          arrayPath: displayType !== "card" ? arrayPath : undefined,
+          arrayPath: arrayPath.length > 0 ? arrayPath : undefined,
+          itemIndex: displayType === "card" && arrayPath.length > 0 ? itemIndex : undefined,
           chartConfig: displayType === "chart" ? {
             xAxisPath: [...arrayPath, "0", xAxisField],
             yAxisPath: [...arrayPath, "0", yAxisField],
@@ -213,6 +240,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
     setFetchError("");
     setDisplayType("card");
     setArrayPath([]);
+    setItemIndex(0);
     setXAxisField("");
     setYAxisField("");
   };
@@ -228,10 +256,10 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
       if (!apiUrl || !apiResponse) return false;
       if (displayType === "card") return selectedFields.length > 0;
       if (displayType === "table") return arrayPath.length > 0 && selectedFields.length > 0;
-      if (displayType === "chart") return arrayPath.length > 0 && xAxisField && yAxisField;
+      if (displayType === "chart") return arrayPath.length > 0 && !!xAxisField && !!yAxisField;
       return false;
     }
-    return !selectedWidget?.needsSymbol || symbol.trim();
+    return !selectedWidget?.needsSymbol || !!symbol.trim();
   };
 
   return (
@@ -367,6 +395,8 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
                         onClick={() => {
                           setDisplayType(value);
                           setSelectedFields([]);
+                          setArrayPath([]);
+                          setItemIndex(0);
                           setXAxisField("");
                           setYAxisField("");
                         }}
@@ -389,46 +419,79 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
                   </div>
                 </div>
 
-                {(displayType === "table" || displayType === "chart") && (
+                {/* Array path selector - show for all modes if arrays exist */}
+                {hasArrays && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">Select Array Path</label>
-                    {availableArrayPaths.length === 0 ? (
-                      <div className="p-3 bg-muted/50 rounded-xl text-sm text-muted-foreground">
-                        No arrays found in response. Try Card display type instead.
-                      </div>
-                    ) : (
-                      <select
-                        value={JSON.stringify(arrayPath)}
-                        onChange={(e) => {
-                          setArrayPath(JSON.parse(e.target.value));
-                          setSelectedFields([]);
-                          setXAxisField("");
-                          setYAxisField("");
-                        }}
-                        className="w-full px-4 py-2.5 border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer text-sm"
-                      >
-                        <option value="[]">Select array...</option>
-                        {availableArrayPaths.map((path) => (
-                          <option key={JSON.stringify(path)} value={JSON.stringify(path)}>
-                            {path.length === 0 ? "(root)" : path.join(" → ")}
-                          </option>
-                        ))}
-                      </select>
+                    <label className="block text-sm font-medium mb-2">
+                      {displayType === "card" ? "Data Source (optional)" : "Select Array Path"}
+                    </label>
+                    <select
+                      value={JSON.stringify(arrayPath)}
+                      onChange={(e) => {
+                        setArrayPath(JSON.parse(e.target.value));
+                        setSelectedFields([]);
+                        setItemIndex(0);
+                        setXAxisField("");
+                        setYAxisField("");
+                      }}
+                      className="w-full px-4 py-2.5 border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer text-sm"
+                    >
+                      <option value="[]">
+                        {displayType === "card" ? "Root object (no array)" : "Select array..."}
+                      </option>
+                      {availableArrayPaths.map((path) => (
+                        <option key={JSON.stringify(path)} value={JSON.stringify(path)}>
+                          {path.length === 0 ? "(root array)" : path.join(" → ")}
+                        </option>
+                      ))}
+                    </select>
+                    {displayType === "card" && arrayPath.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Will show data from item in this array
+                      </p>
                     )}
                   </div>
                 )}
 
-                {displayType === "card" && (
+                {/* Item index selector for Card mode with array */}
+                {displayType === "card" && arrayPath.length > 0 && arrayLength > 1 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Select Item</label>
+                    <select
+                      value={itemIndex}
+                      onChange={(e) => setItemIndex(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer text-sm"
+                    >
+                      {Array.from({ length: Math.min(arrayLength, 20) }, (_, i) => (
+                        <option key={i} value={i}>
+                          Item {i + 1} {i === 0 ? "(first)" : i === arrayLength - 1 ? "(last)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {arrayLength} items available
+                    </p>
+                  </div>
+                )}
+
+                {/* Field selection for Card and Table modes */}
+                {(displayType === "card" || (displayType === "table" && arrayPath.length > 0)) && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium">Select Fields</label>
+                      <label className="text-sm font-medium">
+                        {displayType === "card" ? "Select Fields" : "Select Columns"}
+                      </label>
                       {selectedFields.length > 0 && (
                         <span className="text-xs text-muted-foreground">{selectedFields.length} selected</span>
                       )}
                     </div>
                     <div className="border border-border rounded-xl bg-muted/30 max-h-48 overflow-auto p-2">
                       {availableFields.length === 0 ? (
-                        <div className="text-sm text-muted-foreground p-2 text-center">No fields available</div>
+                        <div className="text-sm text-muted-foreground p-2 text-center">
+                          {displayType === "card" && !arrayPath.length 
+                            ? "Select a data source above, or no fields found in root object"
+                            : "No fields available"}
+                        </div>
                       ) : (
                         <div className="space-y-1">
                           {availableFields.map((field) => (
@@ -453,41 +516,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
                   </div>
                 )}
 
-                {displayType === "table" && arrayPath.length > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium">Select Columns</label>
-                      {selectedFields.length > 0 && (
-                        <span className="text-xs text-muted-foreground">{selectedFields.length} selected</span>
-                      )}
-                    </div>
-                    <div className="border border-border rounded-xl bg-muted/30 max-h-48 overflow-auto p-2">
-                      {availableFields.length === 0 ? (
-                        <div className="text-sm text-muted-foreground p-2 text-center">No fields in array items</div>
-                      ) : (
-                        <div className="space-y-1">
-                          {availableFields.map((field) => (
-                            <label
-                              key={field}
-                              className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted/50 ${
-                                selectedFields.some(f => f.label === field) ? "bg-accent/10" : ""
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedFields.some(f => f.label === field)}
-                                onChange={() => handleFieldToggle(field)}
-                                className="w-4 h-4 rounded border-border text-accent focus:ring-accent"
-                              />
-                              <span className="text-sm">{field}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
+                {/* Chart axis selectors */}
                 {displayType === "chart" && arrayPath.length > 0 && (
                   <div className="mb-4 space-y-3">
                     <div>
@@ -519,6 +548,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd }: AddWidgetModa
                   </div>
                 )}
 
+                {/* Selected fields tags */}
                 {selectedFields.length > 0 && displayType !== "chart" && (
                   <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Selected Fields</label>

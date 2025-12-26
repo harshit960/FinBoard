@@ -23,7 +23,7 @@ export const useDashboardStore = create<DashboardStore>()(
           title,
           config,
           position: { x: 0, y: 0 },
-          size: { width: 1, height: 1 },
+          size: { colSpan: 1, rowSpan: 1 },
         };
         set((state) => ({ widgets: [...state.widgets, newWidget] }));
       },

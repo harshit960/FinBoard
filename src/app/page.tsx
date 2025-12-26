@@ -20,6 +20,10 @@ export default function Home() {
     updateWidget(id, updates);
   };
 
+  const handleResizeWidget = (id: string, colSpan: 1 | 2 | 3, rowSpan: 1 | 2) => {
+    updateWidget(id, { size: { colSpan, rowSpan } });
+  };
+
   if (!hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -33,7 +37,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen py-12 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <Header widgetCount={widgets.length} onAddWidget={() => setIsAddModalOpen(true)} />
 
         <DashboardGrid
@@ -41,6 +45,7 @@ export default function Home() {
           onReorder={reorderWidgets}
           onRemove={removeWidget}
           onEdit={setEditingWidget}
+          onResize={handleResizeWidget}
         />
       </div>
 

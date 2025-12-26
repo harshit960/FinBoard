@@ -24,9 +24,10 @@ interface DashboardGridProps {
   onReorder: (widgets: Widget[]) => void;
   onRemove: (id: string) => void;
   onEdit: (widget: Widget) => void;
+  onResize: (id: string, colSpan: 1 | 2 | 3, rowSpan: 1 | 2) => void;
 }
 
-export default function DashboardGrid({ widgets, onReorder, onRemove, onEdit }: DashboardGridProps) {
+export default function DashboardGrid({ widgets, onReorder, onRemove, onEdit, onResize }: DashboardGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -71,13 +72,19 @@ export default function DashboardGrid({ widgets, onReorder, onRemove, onEdit }: 
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={widgets.map((w) => w.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div 
+          className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          style={{
+            gridAutoRows: "minmax(180px, auto)",
+          }}
+        >
           {widgets.map((widget) => (
             <SortableWidget
               key={widget.id}
               widget={widget}
               onRemove={onRemove}
               onEdit={onEdit}
+              onResize={onResize}
             />
           ))}
         </div>

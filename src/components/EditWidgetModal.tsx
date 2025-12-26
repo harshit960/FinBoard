@@ -87,6 +87,7 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
   const [displayType, setDisplayType] = useState<DisplayType>("card");
   const [selectedFields, setSelectedFields] = useState<FieldMapping[]>([]);
   const [arrayPath, setArrayPath] = useState<string[]>([]);
+  const [itemIndex, setItemIndex] = useState(0);
   const [xAxisField, setXAxisField] = useState("");
   const [yAxisField, setYAxisField] = useState("");
 
@@ -105,6 +106,7 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
         setDisplayType(widget.config.customApi.displayType || "card");
         setSelectedFields(widget.config.customApi.fields);
         setArrayPath(widget.config.customApi.arrayPath || []);
+        setItemIndex(widget.config.customApi.itemIndex || 0);
         if (widget.config.customApi.chartConfig) {
           setXAxisField(widget.config.customApi.chartConfig.xAxisLabel || "");
           setYAxisField(widget.config.customApi.chartConfig.yAxisLabel || "");
@@ -192,13 +194,18 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
       config.chartInterval = chartInterval;
     }
     if (isCustom) {
-      if (!apiUrl || selectedFields.length === 0) return;
+      if (!apiUrl) return;
+      if (displayType === "card" && selectedFields.length === 0) return;
+      if (displayType === "table" && (arrayPath.length === 0 || selectedFields.length === 0)) return;
+      if (displayType === "chart" && (arrayPath.length === 0 || !xAxisField || !yAxisField)) return;
+      
       config.customApi = {
         url: apiUrl,
         auth: { type: authType, key: authKey, value: authValue },
         displayType,
         fields: selectedFields,
-        arrayPath: displayType !== "card" ? arrayPath : undefined,
+        arrayPath: arrayPath.length > 0 ? arrayPath : undefined,
+        itemIndex: displayType === "card" && arrayPath.length > 0 ? itemIndex : undefined,
         chartConfig: displayType === "chart" ? {
           xAxisPath: [...arrayPath, "0", xAxisField],
           yAxisPath: [...arrayPath, "0", yAxisField],
@@ -237,7 +244,8 @@ export default function EditWidgetModal({ isOpen, onClose, widget, onSave }: Edi
       if (!apiUrl) return false;
       if (displayType === "card") return selectedFields.length > 0;
       if (displayType === "table") return arrayPath.length > 0 && selectedFields.length > 0;
-      if (displayType === "chart") return arrayPath.length > 0 && xAxisField && yAxisField;
+      if (displayType === "chart") return arrayPath.length > 0 && !!xAxisField && !!yAxisField;
+      return false;
     }
     return true;
   };

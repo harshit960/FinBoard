@@ -29,6 +29,7 @@ export interface CustomApiConfig {
   displayType: DisplayType;
   fields: FieldMapping[];
   arrayPath?: string[];
+  itemIndex?: number;
   chartConfig?: ChartConfig;
 }
 
@@ -39,13 +40,18 @@ export interface WidgetConfig {
   customApi?: CustomApiConfig;
 }
 
+export interface WidgetSize {
+  colSpan: 1 | 2 | 3;
+  rowSpan: 1 | 2;
+}
+
 export interface Widget {
   id: string;
   type: WidgetType;
   title: string;
   config: WidgetConfig;
   position: { x: number; y: number };
-  size: { width: number; height: number };
+  size: WidgetSize;
 }
 
 export interface DashboardState {

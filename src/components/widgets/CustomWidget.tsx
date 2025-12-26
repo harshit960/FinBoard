@@ -62,10 +62,24 @@ function formatValue(value: unknown, format?: string): string {
 }
 
 function CardView({ data, config }: { data: unknown; config: CustomApiConfig }) {
+  // Get the data source - if arrayPath is set, get that item
+  let sourceData = data;
+  
+  if (config.arrayPath && config.arrayPath.length > 0) {
+    const arrayData = getValueByPath(data, config.arrayPath);
+    if (Array.isArray(arrayData) && arrayData.length > 0) {
+      const index = config.itemIndex ?? 0;
+      sourceData = arrayData[Math.min(index, arrayData.length - 1)];
+    }
+  }
+
   return (
     <div className="space-y-3">
       {config.fields.map((field) => {
-        const value = getValueByPath(data, field.path);
+        // For card view, field.path contains just the field name
+        const value = typeof sourceData === "object" && sourceData !== null
+          ? (sourceData as Record<string, unknown>)[field.label]
+          : undefined;
         return (
           <div key={field.label} className="flex justify-between items-center py-1">
             <span className="text-sm text-muted-foreground">{field.label}</span>
