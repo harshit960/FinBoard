@@ -20,6 +20,30 @@ Build a **Customizable Finance Dashboard** that allows users to:
 | **@dnd-kit** | Drag and drop functionality |
 | **react-icons** | Icon library |
 
+## Recent Changes
+
+### v1.2.0
+- ✨ **Export/Import Dashboard** — Backup and restore your dashboard configuration as JSON
+- 🎨 **Theme Switching** — Light, Dark, and System preference modes
+- ⚡ **API Response Caching** — 3-minute TTL cache to reduce redundant API calls
+- 🔄 **Auto-Retry on Error** — Automatic 3x retry with 3s delay and countdown UI
+- 📐 **Drag-to-Resize Widgets** — Resize widgets by dragging the corner handle
+- 📋 **Popular Stocks Dropdown** — Quick selection of common stock symbols
+- 🚀 **Lazy Loading** — Modals and widgets load on demand
+- 🛡️ **Backup Validation** — Import validates JSON structure before applying
+
+### v1.1.0
+- Custom API Widget with authentication options
+- JSON Explorer for field selection
+- Table pagination, search, and filters
+- Widget edit/config panel
+- Manual refresh button per widget
+
+### v1.0.0
+- Initial release with Stock Card, Top Gainers Table, and Price Chart widgets
+- Drag-and-drop widget reordering
+- Persistent storage with localStorage
+
 ## Features Implemented
 
 ### Core Dashboard
@@ -29,6 +53,7 @@ Build a **Customizable Finance Dashboard** that allows users to:
 - [x] **Persistent Storage** — Dashboard state saved to localStorage
 - [x] **Responsive Grid** — Adapts to screen size
 - [x] **Lazy Loading** — Widgets and modals load on demand for faster initial load
+- [x] **Export/Import** — Backup and restore dashboard configuration
 
 ### Widget Types
 
@@ -80,6 +105,7 @@ Build a **Customizable Finance Dashboard** that allows users to:
 - [x] **Live Clock** — Current time in header
 - [x] **Smooth Animations** — Transitions and hover effects
 - [x] **Modal Dialogs** — Add/Edit widget forms
+- [x] **Settings Menu** — Theme and backup options
 
 ## Getting Started
 
@@ -95,6 +121,9 @@ npm install
 
 # Start development server
 npm run dev
+
+# Build for production
+npm run build
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -103,15 +132,19 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 The dashboard uses **Alpha Vantage** for stock data. The demo API key has rate limits (5 calls/min). 
 
-For production, get your own API key at [alphavantage.co](https://www.alphavantage.co/support/#api-key) and update `src/services/api.ts`.
+For production, get your own API key at [alphavantage.co](https://www.alphavantage.co/support/#api-key) and create a `.env` file:
+
+```env
+NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key_here
+```
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── globals.css      # Tailwind + CSS variables
-│   ├── layout.tsx       # Root layout
+│   ├── globals.css      # Tailwind + CSS variables + dark mode
+│   ├── layout.tsx       # Root layout with ThemeProvider
 │   └── page.tsx         # Dashboard page
 ├── components/
 │   ├── widgets/
@@ -123,18 +156,22 @@ src/
 │   ├── EditWidgetModal.tsx
 │   ├── DashboardGrid.tsx
 │   ├── SortableWidget.tsx
-│   ├── Header.tsx
+│   ├── Header.tsx          # Logo, theme toggle, export/import
+│   ├── ThemeProvider.tsx   # Dark mode logic
 │   ├── Modal.tsx
 │   └── JsonExplorer.tsx
 ├── hooks/
-│   ├── useStockData.ts  # Data fetching hooks
-│   └── useHydration.ts  # SSR hydration
+│   ├── useStockData.ts     # Data fetching with retry
+│   └── useHydration.ts     # SSR hydration
 ├── services/
-│   └── api.ts           # Alpha Vantage API
+│   └── api.ts              # Alpha Vantage API
 ├── store/
-│   └── dashboardStore.ts # Zustand store
+│   ├── dashboardStore.ts   # Widget state
+│   └── themeStore.ts       # Theme preference
+├── utils/
+│   └── configBackup.ts     # Export/import logic
 └── types/
-    └── index.ts         # TypeScript types
+    └── index.ts            # TypeScript types
 ```
 
 ## Custom API Examples
@@ -153,34 +190,23 @@ https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd
 https://randomuser.me/api/?results=10
 ```
 
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Drag widget | Click & hold on widget header |
+| Resize widget | Drag corner handle |
+
 ## Screenshots
 
 The dashboard features:
-- Clean header with logo, widget count, and add button
+- Clean header with logo, widget count, theme toggle, and settings menu
 - Draggable widget grid with visual feedback
 - Edit panel for configuring each widget
 - Resize handles on widget corners
 - Empty state with helpful guidance
+- Export/Import backup functionality
 
-## Assignment Checklist
-
-| Requirement | Status |
-|-------------|--------|
-| Widget management (add/remove/rearrange) | ✅ |
-| Financial API integration | ✅ |
-| Real-time data updates | ✅ |
-| Custom refresh intervals | ✅ |
-| Data persistence (localStorage) | ✅ |
-| Responsive design | ✅ |
-| Custom API connectivity | ✅ |
-| Multiple display types | ✅ |
-| Table pagination & filters | ✅ |
-| Widget edit/config panel | ✅ |
-| Error handling & retry | ✅ |
-| Resizable widgets | ✅ |
-| Lazy loading / code splitting | ✅ |
-| Dark mode / theme switching | ✅ |
-| Config backup (export/import) | ✅ |
 
 ## License
 
