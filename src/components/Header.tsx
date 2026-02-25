@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { HiPlus, HiSun, HiMoon, HiDesktopComputer, HiCog, HiDownload, HiUpload } from "react-icons/hi";
+import Link from "next/link";
+import { HiPlus, HiSun, HiMoon, HiDesktopComputer, HiCog, HiDownload, HiUpload, HiInformationCircle } from "react-icons/hi";
 import { RiStockLine } from "react-icons/ri";
 import { useThemeStore, useDashboardStore } from "@/store";
 import { exportDashboard, parseBackupFile } from "@/utils";
@@ -188,6 +189,14 @@ export default function Header({ widgetCount, onAddWidget }: HeaderProps) {
               )}
             </div>
           )}
+
+          <Link
+            href="/about"
+            className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            title="About Us"
+          >
+            <HiInformationCircle className="w-5 h-5" />
+          </Link>
 
           <button
             onClick={onAddWidget}
